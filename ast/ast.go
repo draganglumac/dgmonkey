@@ -131,7 +131,7 @@ func (il *IntegerLiteral) TokenLiteral() string {
 	return il.Token.Literal
 }
 func (il *IntegerLiteral) String() string {
-	return il.Token.Literal
+	return il.TokenLiteral()
 }
 
 type PrefixExpression struct {
@@ -176,4 +176,17 @@ func (ie *InfixExpression) String() string {
 	out.WriteString(")")
 
 	return out.String()
+}
+
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (b *Boolean) expressionNode() {}
+func (b *Boolean) TokenLiteral() string {
+	return b.Token.Literal
+}
+func (b *Boolean) String() string {
+	return b.TokenLiteral()
 }
