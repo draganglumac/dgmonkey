@@ -8,16 +8,16 @@ import (
 )
 
 var (
-	NULL = &object.Null{}
-	TRUE = &object.Boolean{Value: true}
+	NULL  = &object.Null{}
+	TRUE  = &object.Boolean{Value: true}
 	FALSE = &object.Boolean{Value: false}
 )
 
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
-		// Statements
+	// Statements
 	case *ast.Program:
-		return evalStatements(node.Statements)
+		return evalProgram(node)
 
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
@@ -27,7 +27,7 @@ func Eval(node ast.Node) object.Object {
 		return &object.Integer{Value: node.Value}
 
 	case *ast.Boolean:
-		return nativeBooToBooleanObject(node.Value)
+		return nativeBoolToBooleanObject(node.Value)
 
 	case *ast.PrefixExpression:
 		right := Eval(node.Right)
@@ -39,26 +39,48 @@ func Eval(node ast.Node) object.Object {
 		return evalInfixExpression(node.Operator, left, right)
 
 	case *ast.BlockStatement:
-		return evalStatements(node.Statements)
+		return evalBlockStatement(node)
 
 	case *ast.IfExpression:
 		return evalIfExpression(node)
+
+	case *ast.ReturnStatement:
+		val := Eval(node.ReturnValue)
+		return &object.ReturnValue{Value: val}
 	}
 
 	return nil
 }
 
-func evalStatements(stmts []ast.Statement) object.Object {
+func evalProgram(program *ast.Program) object.Object {
 	var result object.Object
 
-	for _, statement := range stmts {
+	for _, statement := range program.Statements {
 		result = Eval(statement)
+
+		if returnValue, ok := result.(*object.ReturnValue); ok {
+			return returnValue.Value
+		}
 	}
 
 	return result
 }
 
-func nativeBooToBooleanObject(input bool) *object.Boolean {
+func evalBlockStatement(block *ast.BlockStatement) object.Object {
+	var result object.Object
+
+	for _, statement := range block.Statements {
+		result = Eval(statement)
+
+		if result != nil && result.Type() == object.RETURN_VALUE_OBJ {
+			return result
+		}
+	}
+
+	return result
+}
+
+func nativeBoolToBooleanObject(input bool) *object.Boolean {
 	if input {
 		return TRUE
 	}
@@ -98,21 +120,21 @@ func evalMinusPrefixOperatorExpression(right object.Object) object.Object {
 	return &object.Integer{Value: -value}
 }
 
-func evalInfixExpression(operator string, left, right object.Object,) object.Object {
+func evalInfixExpression(operator string, left, right object.Object) object.Object {
 	switch {
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		return evalIntegerInfixExpression(operator, left, right)
 	case operator == "==":
-		return nativeBooToBooleanObject(left == right)
+		return nativeBoolToBooleanObject(left == right)
 	case operator == "!=":
-		return nativeBooToBooleanObject(left != right)
+		return nativeBoolToBooleanObject(left != right)
 	default:
 		return NULL
 	}
 }
 
-func evalIntegerInfixExpression(operator string, left, right object.Object,) object.Object {
-	leftVal := 	left.(*object.Integer).Value
+func evalIntegerInfixExpression(operator string, left, right object.Object) object.Object {
+	leftVal := left.(*object.Integer).Value
 	rigthVal := right.(*object.Integer).Value
 
 	switch operator {
@@ -125,13 +147,13 @@ func evalIntegerInfixExpression(operator string, left, right object.Object,) obj
 	case "/":
 		return &object.Integer{Value: leftVal / rigthVal}
 	case "<":
-		return nativeBooToBooleanObject(leftVal < rigthVal)
+		return nativeBoolToBooleanObject(leftVal < rigthVal)
 	case ">":
-		return nativeBooToBooleanObject(leftVal > rigthVal)
+		return nativeBoolToBooleanObject(leftVal > rigthVal)
 	case "==":
-		return nativeBooToBooleanObject(leftVal == rigthVal)
+		return nativeBoolToBooleanObject(leftVal == rigthVal)
 	case "!=":
-		return nativeBooToBooleanObject(leftVal != rigthVal)
+		return nativeBoolToBooleanObject(leftVal != rigthVal)
 	default:
 		return NULL
 	}
