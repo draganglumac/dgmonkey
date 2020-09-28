@@ -54,14 +54,14 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		stackTop := machine.StackTop()
-		io.WriteString(out, stackTop.Inspect())
+		lastPopped := machine.LastPoppedStackElem()
+		io.WriteString(out, lastPopped.Inspect())
 		io.WriteString(out, "\n")
 	}
 }
 
 const MONKEY_FACE = `
-       .-"-.            .-"-.            .-"-.           .-"-.
+       .-"-.            .-"-.            .-"-.           .-"-.1
      _/_-.-_\_        _/.-.-.\_        _/.-.-.\_       _/.-.-.\_
     / __} {__ \      /|( o o )|\      ( ( o o ) )     ( ( o o ) )
    / //  "  \\ \    | //  "  \\ |      |/  "  \|       |/  "  \|
