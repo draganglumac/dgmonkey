@@ -25,7 +25,7 @@ func testIntegerObject(expected int64, actual object.Object) error {
 	}
 
 	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. got=%d, want=%d", actual, result.Value)
+		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
 	}
 
 	return nil
@@ -76,6 +76,15 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"1", 1},
 		{"2", 2},
 		{"1 + 2", 3},
+		{"1 - 2", -1},
+		{"1 * 2", 2},
+		{"4 / 2", 2},
+		{"50 / 2 * 2 + 10 - 5", 55},
+		{"5 + 5 + 5 + 5 - 10", 10},
+		{"2 * 2 * 2 * 2 * 2", 32},
+		{"5 * 2 + 10", 20},
+		{"5 + 2 * 10", 25},
+		{"5 * (2 + 10)", 60},
 	}
 
 	runVmTests(t, tests)
