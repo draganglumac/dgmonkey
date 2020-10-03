@@ -10,23 +10,25 @@ import (
 )
 
 type Compiler struct {
-	instructions code.Instructions
-	constants []object.Object
-	lastInstruction EmittedInstruction
+	instructions        code.Instructions
+	constants           []object.Object
+	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
+	symbolTable         *SymbolTable
 }
 
 type EmittedInstruction struct {
-	Opcode code.Opcode
+	Opcode   code.Opcode
 	Position int
 }
 
 func New() *Compiler {
 	return &Compiler{
-		instructions: code.Instructions{},
-		constants: []object.Object{},
-		lastInstruction: EmittedInstruction{},
+		instructions:        code.Instructions{},
+		constants:           []object.Object{},
+		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
+		symbolTable:         NewSymbolTable(),
 	}
 }
 
@@ -154,6 +156,19 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
+	case *ast.LetStatement:
+		err := c.Compile(node.Value)
+		if err != nil {
+			return err
+		}
+		symbol := c.symbolTable.Define(node.Name.Value)
+		c.emit(code.OpSetGlobal, symbol.Index)
+	case *ast.Identifier:
+		symbol, ok := c.symbolTable.Resolve(node.Value)
+		if !ok {
+			return fmt.Errorf("undefined variable %s", node.Value)
+		}
+		c.emit(code.OpGetGlobal, symbol.Index)
 	}
 
 	return nil
@@ -161,13 +176,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 type Bytecode struct {
 	Instructions code.Instructions
-	Constants []object.Object
+	Constants    []object.Object
 }
 
-func (c *Compiler) Bytecode() *Bytecode  {
+func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
 		Instructions: c.instructions,
-		Constants: c.constants,
+		Constants:    c.constants,
 	}
 }
 
@@ -193,7 +208,7 @@ func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
 	c.previousInstruction = c.lastInstruction
 	last := EmittedInstruction{Opcode: op, Position: pos}
 	c.lastInstruction = last
-	
+
 }
 
 func (c *Compiler) lastInstructionIsPop() bool {
