@@ -448,7 +448,7 @@ func (vm *VM) callFunction(numArgs int) error {
 	if numArgs != fn.NumParameters {
 		return fmt.Errorf("wrong number of arguments: want=%d, got=%d", fn.NumParameters, numArgs)
 	}
-	
+
 	frame := NewFrame(fn, vm.sp-numArgs)
 	vm.pushFrame(frame)
 
