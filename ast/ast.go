@@ -4,6 +4,7 @@ package ast
 
 import (
 	"bytes"
+	"fmt"
 	"monkey/token"
 	"strings"
 )
@@ -216,6 +217,7 @@ type FunctionLiteral struct {
 	Token      token.Token // the 'fn' token
 	Parameters []*Identifier
 	Body       *BlockStatement
+	Name       string
 }
 
 func (fl *FunctionLiteral) expressionNode()      {}
@@ -229,6 +231,9 @@ func (fl *FunctionLiteral) String() string {
 	}
 
 	out.WriteString(fl.TokenLiteral())
+	if fl.Name != "" {
+		out.WriteString(fmt.Sprintf("<%s>", fl.Name))
+	}
 	out.WriteString("(")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(")")
@@ -294,7 +299,7 @@ func (al *ArrayLiteral) String() string {
 
 type IndexExpression struct {
 	Token token.Token // the '[' token
-	Left Expression
+	Left  Expression
 	Index Expression
 }
 
@@ -325,7 +330,7 @@ func (hl *HashLiteral) String() string {
 
 	pairs := []string{}
 	for key, value := range hl.Pairs {
-		pairs = append(pairs, key.String() + ":" + value.String())
+		pairs = append(pairs, key.String()+":"+value.String())
 	}
 	out.WriteString("{")
 	out.WriteString(strings.Join(pairs, ", "))
